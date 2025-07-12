@@ -7,11 +7,11 @@ import upickle.core.LinkedHashMap
 
 import utils._
 
-type currencyCode = String
+type CurrencyCode = String
 
 case class CurrenciesData(
-  baseCurrency: currencyCode,
-  rates: Map[currencyCode, Double],
+  baseCurrency: CurrencyCode,
+  rates: Map[CurrencyCode, Double],
   timeMoment: Instant,
 )
 
@@ -41,3 +41,19 @@ class CurrenciesDataRepository extends JsonApiHandler:
     request_get(currenciesDataEndpoint)
     .flatMap(validateCurrencyDataMessage)
     .flatMap(currenciesDataToObject)
+  
+
+def convertToBaseCurrency(
+  value: Double, currentCurrency: CurrencyCode)(using currenciesData: CurrenciesData): Double =
+  value / currenciesData.rates(currentCurrency)
+
+
+def convertFromBaseCurrency(
+  value: Double, targetCurrency: CurrencyCode)(using currenciesData: CurrenciesData): Double =
+    value * currenciesData.rates(targetCurrency)
+
+
+def convertCurrency(
+  value: Double, currentCurrency: CurrencyCode, targetCurrency: CurrencyCode)(using currenciesData: CurrenciesData): Double =
+    val valueInBaseCurrency = convertToBaseCurrency(value, currentCurrency)
+    convertFromBaseCurrency(valueInBaseCurrency, targetCurrency)
