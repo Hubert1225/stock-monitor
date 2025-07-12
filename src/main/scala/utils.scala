@@ -1,5 +1,6 @@
 package utils
 
+import scala.util.{Try, Success, Failure}
 import sttp.client4.quick._
 import sttp.client4.Response
 import ujson.read
@@ -10,6 +11,9 @@ import ujson.Value.Value
  * JSON data 
  */
 trait JsonApiHandler:
-  def request_get(url: String): ujson.Value.Value =
-    val response = quickRequest.get(uri"$url").send()
-    ujson.read(response.body)
+  private def tryParseJson(body: String): Try[ujson.Value.Value] =
+    Try(ujson.read(body))
+
+  def request_get(url: String): Try[ujson.Value.Value] =
+    Try(quickRequest.get(uri"$url").send())
+    .flatMap((response: Response[String]) => tryParseJson(response.body))
