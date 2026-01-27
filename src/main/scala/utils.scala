@@ -12,6 +12,6 @@ trait JsonApiHandler:
   private def tryParseJson(body: String): Try[ujson.Value.Value] =
     Try(ujson.read(body))
 
-  def request_get(url: String): Try[ujson.Value.Value] =
+  def requestGet(url: String): Try[ujson.Value.Value] =
     Try(quickRequest.get(uri"$url").send())
       .flatMap((response: Response[String]) => tryParseJson(response.body))

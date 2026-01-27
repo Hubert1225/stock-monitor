@@ -46,7 +46,7 @@ class CurrenciesDataRepository extends JsonApiHandler:
   )
 
   def fetch(): Try[CurrenciesData] =
-    request_get(currenciesDataEndpoint)
+    requestGet(currenciesDataEndpoint)
       .flatMap(validateCurrencyDataMessage)
       .flatMap(currenciesDataToObject)
 
