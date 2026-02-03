@@ -6,3 +6,20 @@ hs_err_pid*
 
 # SBT
 target/
+project/target/
+project/project/
+
+# Bloop
+.bloop/
+project/.bloop/
+
+# Metals
+.metals/
+.bsp/
+project/metals.sbt
+
+# VS Code
+.vscode/
+
+# other
+.DS_Store
