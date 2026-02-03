@@ -19,20 +19,16 @@ class CurrenciesDataRepository extends JsonApiHandler:
   private lazy val currenciesDataEndpoint = "https://open.er-api.com/v6/latest/USD"
 
   private def validateCurrencyDataMessage(
-      message: ujson.Value.Value
+      messageObj: LinkedHashMap[String, ujson.Value.Value]
   ): Try[LinkedHashMap[String, ujson.Value.Value]] =
-    val messageObjTry = Try(message.obj)
-    messageObjTry match
-      case Success(messageObj) =>
-        if messageObj.contains("result") && messageObj("result").str == "success"
-        then Success(messageObj)
-        else
-          Failure(
-            new Exception(
-              "The field \"result\" not present in the currencies data JSON or its value is not \"success\""
-            )
-          )
-      case Failure(exception) => messageObjTry
+    if messageObj.contains("result") && messageObj("result").str == "success"
+    then Success(messageObj)
+    else
+      Failure(
+        new Exception(
+          "The field \"result\" not present in the currencies data JSON or its value is not \"success\""
+        )
+      )
 
   private def currenciesDataToObject(
       currenciesData: LinkedHashMap[String, ujson.Value.Value]
@@ -47,6 +43,7 @@ class CurrenciesDataRepository extends JsonApiHandler:
 
   def fetch(): Try[CurrenciesData] =
     requestGet(currenciesDataEndpoint)
+      .flatMap((jsonContent: ujson.Value.Value) => Try(jsonContent.obj))
       .flatMap(validateCurrencyDataMessage)
       .flatMap(currenciesDataToObject)
 
