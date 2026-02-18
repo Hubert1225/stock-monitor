@@ -7,25 +7,7 @@ import sttp.client4.*
 import sttp.model.*
 
 import utils._
-import currencies.CurrencyCode
-
-case class Exchange(
-    title: String,
-    name: String,
-    code: String,
-    country: String,
-    timezone: String
-)
-
-case class Stock(
-    symbol: String,
-    name: String,
-    currency: CurrencyCode,
-    exchange: String,
-    micCode: String,
-    country: String,
-    figiCode: String
-)
+import domain.{Stock, Exchange}
 
 class TwelveDataClient extends JsonApiHandler:
 
