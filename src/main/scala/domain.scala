@@ -1,5 +1,7 @@
 package domain
 
+import java.time.{Instant, Duration}
+
 import currencies.CurrencyCode
 
 case class Exchange(
@@ -19,3 +21,45 @@ case class Stock(
     country: String,
     figiCode: String
 )
+
+class TimeSeries(
+    val values: Vector[Float],
+    private val startTime: Instant,
+    private val interval: String
+):
+
+  private val intervalPattern = "^([0-9]+)((m)|(h)|(days?))$".r
+
+  private val intervalDuration = interval match
+    case intervalPattern(n, unit, _, _, _) =>
+      unit match
+        case "m"    => Duration.ofMinutes(n.toInt)
+        case "h"    => Duration.ofHours(n.toInt)
+        case "day"  => Duration.ofDays(n.toInt)
+        case "days" => Duration.ofDays(n.toInt)
+        case _      => throw new Exception(s"Unknown time unit: $unit")
+    case _ => throw new Exception(s"Given interval could not be parsed: $interval")
+
+  def getStartTime = startTime
+  def getInterval = interval
+  lazy val length = values.length
+  lazy val lastTime = startTime.plusSeconds(intervalDuration.toSeconds() * (length - 1))
+
+  def getFromToIndex(fromIndex: Int, toIndex: Int): TimeSeries =
+    require(fromIndex < toIndex)
+    require(fromIndex >= 0)
+    require(toIndex < length)
+    val newValues = for index <- Range.inclusive(fromIndex, toIndex) yield values(index)
+    TimeSeries(
+      newValues.toVector,
+      startTime.plusSeconds(intervalDuration.getSeconds() * fromIndex),
+      interval
+    )
+
+  def getFromToTime(fromTime: Instant, toTime: Instant): TimeSeries =
+    val startOffset =
+      Duration.between(startTime, fromTime).toSeconds() / intervalDuration.toSeconds()
+    assert(startOffset >= 0)
+    val endOffset = Duration.between(toTime, lastTime).toSeconds() / intervalDuration.toSeconds()
+    assert(endOffset >= 0)
+    getFromToIndex(startOffset.toInt, (length - endOffset - 1).toInt)
