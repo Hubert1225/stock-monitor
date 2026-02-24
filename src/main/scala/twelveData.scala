@@ -7,7 +7,9 @@ import sttp.client4.*
 import sttp.model.*
 
 import utils._
-import domain.{Stock, Exchange}
+import domain.{Stock, Exchange, TimeSeries, StockTimeSeries}
+import java.time.{Instant, Duration}
+import domain.TimeSeries
 
 class TwelveDataClient extends JsonApiHandler:
 
@@ -26,6 +28,7 @@ class TwelveDataClient extends JsonApiHandler:
 
   lazy val exchangesEndpoint = endpointUrl("exchanges")
   lazy val stocksEndpoint = endpointUrl("stocks")
+  lazy val timeSeriesEndpoint = endpointUrl("time_series")
 
   private def validateResponse(
       responseObj: LinkedHashMap[String, ujson.Value.Value]
@@ -36,6 +39,20 @@ class TwelveDataClient extends JsonApiHandler:
       Failure(
         new Exception("Response does not contain the \"status\" or status is unsuccessful")
       )
+
+  private val datetimeStringPattern =
+    "^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}):([0-9]{2}):([0-9]{2})$".r
+  private def datetimeStringToInstant(datetimeString: String): Instant =
+    datetimeStringPattern.findFirstMatchIn(datetimeString) match
+      case Some(datetimeMatch) =>
+        val year = datetimeMatch.group(1)
+        val month = datetimeMatch.group(2)
+        val day = datetimeMatch.group(3)
+        val hour = datetimeMatch.group(4)
+        val minute = datetimeMatch.group(5)
+        val second = datetimeMatch.group(6)
+        Instant.parse(s"$year-$month-${day}T$hour:$minute:${second}Z")
+      case None => throw new Exception(s"Could not parse datetime string: $datetimeString")
 
   private def parseExchangeObject(
       exchangeJsonObj: LinkedHashMap[String, ujson.Value.Value]
@@ -59,6 +76,38 @@ class TwelveDataClient extends JsonApiHandler:
       figiCode = stockJsonObj("figi_code").str
     )
 
+  private def parseTimeSeriesObject(
+      stockSeriesJsonObj: LinkedHashMap[String, ujson.Value.Value]
+  ): StockTimeSeries =
+    val dataPoints = stockSeriesJsonObj("values").arr.reverse.toList
+    val pointsInstants = for obj <- dataPoints yield datetimeStringToInstant(obj("datetime").str)
+
+    if pointsInstants.length > 1 & !areInstantsEvenlySpaced(
+        pointsInstants,
+        Duration.between(pointsInstants(0), pointsInstants(1))
+      )
+    then throw new Exception("Found data points not evenly spaced in time")
+
+    val seriesMap = List("open", "close", "high", "low")
+      .map((seriesName) => seriesName -> (for obj <- dataPoints yield obj(seriesName).str.toDouble))
+      .map((nameAndValues) =>
+        nameAndValues._1 -> TimeSeries(
+          values = nameAndValues._2.toVector,
+          startTime = pointsInstants(0),
+          interval = stockSeriesJsonObj("meta").obj("interval").str
+        )
+      )
+      .toMap
+
+    StockTimeSeries(
+      stockSymbol = stockSeriesJsonObj("meta").obj("symbol").str,
+      currency = stockSeriesJsonObj("meta").obj("currency").str,
+      openValues = seriesMap("open"),
+      closeValues = seriesMap("close"),
+      highValues = seriesMap("high"),
+      lowValues = seriesMap("low")
+    )
+
   private def getObjectsFun[T](
       parseFun: (LinkedHashMap[String, ujson.Value.Value]) => T,
       endpoint: Option[Map[String, String]] => String
@@ -72,3 +121,9 @@ class TwelveDataClient extends JsonApiHandler:
 
   val getExchanges = getObjectsFun(parseExchangeObject, exchangesEndpoint)
   val getStocks = getObjectsFun(parseStockObject, stocksEndpoint)
+  val getTimeSeries =
+    (queryParams: Option[Map[String, String]]) =>
+      requestGet(timeSeriesEndpoint(queryParams))
+        .map(_.obj)
+        .flatMap(validateResponse)
+        .map(parseTimeSeriesObject)

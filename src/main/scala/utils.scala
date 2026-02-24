@@ -5,6 +5,7 @@ import sttp.client4.quick._
 import sttp.client4.Response
 import ujson.read
 import ujson.Value.Value
+import java.time.{Instant, Duration}
 
 /** A utility for convenient interaction with Web APIs sending JSON data
   */
@@ -15,3 +16,15 @@ trait JsonApiHandler:
   def requestGet(url: String): Try[ujson.Value.Value] =
     Try(quickRequest.get(uri"$url").send())
       .flatMap((response: Response[String]) => tryParseJson(response.body))
+
+/** Checks whether all breaks between time moments indicated by subsequent `Instant` instances are
+  * equal to `expectedBreak`
+  */
+def areInstantsEvenlySpaced(instants: List[Instant], expectedBreak: Duration): Boolean =
+  instants match
+    case instantPrev :: instantNext :: rest =>
+      (Duration.between(instantPrev, instantNext) == expectedBreak) & areInstantsEvenlySpaced(
+        instants.tail,
+        expectedBreak
+      )
+    case _ => true

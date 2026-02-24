@@ -23,17 +23,17 @@ case class Stock(
 )
 
 class TimeSeries(
-    val values: Vector[Float],
+    val values: Vector[Double],
     private val startTime: Instant,
     private val interval: String
 ):
 
-  private val intervalPattern = "^([0-9]+)((m)|(h)|(days?))$".r
+  private val intervalPattern = "^([0-9]+)((min)|(h)|(days?))$".r
 
   private val intervalDuration = interval match
     case intervalPattern(n, unit, _, _, _) =>
       unit match
-        case "m"    => Duration.ofMinutes(n.toInt)
+        case "min"  => Duration.ofMinutes(n.toInt)
         case "h"    => Duration.ofHours(n.toInt)
         case "day"  => Duration.ofDays(n.toInt)
         case "days" => Duration.ofDays(n.toInt)
@@ -63,3 +63,12 @@ class TimeSeries(
     val endOffset = Duration.between(toTime, lastTime).toSeconds() / intervalDuration.toSeconds()
     assert(endOffset >= 0)
     getFromToIndex(startOffset.toInt, (length - endOffset - 1).toInt)
+
+case class StockTimeSeries(
+    stockSymbol: String,
+    currency: CurrencyCode,
+    openValues: TimeSeries,
+    closeValues: TimeSeries,
+    highValues: TimeSeries,
+    lowValues: TimeSeries
+)
