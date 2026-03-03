@@ -39,7 +39,7 @@ class TimeSeries(
 ):
 
   // resolve interval
-  
+
   private val intervalPattern = "^([0-9]+)(min|h|days?)$".r
 
   val interval = intervalString match
@@ -66,7 +66,7 @@ class TimeSeries(
     require(fromIndex >= 0)
     require(toIndex < length)
     TimeSeries(
-      values.slice(fromIndex, toIndex + 1),  // inclusive on both sides
+      values.slice(fromIndex, toIndex + 1), // inclusive on both sides
       startTime.plusSeconds(intervalDuration.getSeconds() * fromIndex),
       intervalString
     )

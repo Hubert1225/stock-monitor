@@ -1,6 +1,7 @@
 package utils
 
 import scala.util.{Try, Success, Failure}
+import scala.annotation.tailrec
 import sttp.client4.quick._
 import sttp.client4.Response
 import ujson.read
@@ -20,11 +21,11 @@ trait JsonApiHandler:
 /** Checks whether all breaks between time moments indicated by subsequent `Instant` instances are
   * equal to `expectedBreak`
   */
+@tailrec
 def areInstantsEvenlySpaced(instants: List[Instant], expectedBreak: Duration): Boolean =
   instants match
     case instantPrev :: instantNext :: rest =>
-      (Duration.between(instantPrev, instantNext) == expectedBreak) && areInstantsEvenlySpaced(
-        instants.tail,
-        expectedBreak
-      )
+      if Duration.between(instantPrev, instantNext) == expectedBreak
+      then areInstantsEvenlySpaced(instants.tail, expectedBreak)
+      else false
     case _ => true
