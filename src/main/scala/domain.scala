@@ -28,10 +28,10 @@ class TimeSeries(
     private val interval: String
 ):
 
-  private val intervalPattern = "^([0-9]+)((min)|(h)|(days?))$".r
+  private val intervalPattern = "^([0-9]+)(min|h|days?)$".r
 
   private val intervalDuration = interval match
-    case intervalPattern(n, unit, _, _, _) =>
+    case intervalPattern(n, unit) =>
       unit match
         case "min"  => Duration.ofMinutes(n.toInt)
         case "h"    => Duration.ofHours(n.toInt)
