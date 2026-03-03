@@ -49,9 +49,8 @@ class TimeSeries(
     require(fromIndex < toIndex)
     require(fromIndex >= 0)
     require(toIndex < length)
-    val newValues = for index <- Range.inclusive(fromIndex, toIndex) yield values(index)
     TimeSeries(
-      newValues.toVector,
+      values.slice(fromIndex, toIndex + 1),  // inclusive on both sides
       startTime.plusSeconds(intervalDuration.getSeconds() * fromIndex),
       interval
     )
