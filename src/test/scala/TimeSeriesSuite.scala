@@ -1,5 +1,5 @@
 import java.time.Instant
-import domain.{TimeSeries}
+import domain.TimeSeries
 
 class TimeSeriesSuite extends munit.FunSuite {
     test("correct lastTime") {
