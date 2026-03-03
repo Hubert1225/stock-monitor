@@ -8,7 +8,8 @@ import sttp.model.*
 
 import utils._
 import domain.{Stock, Exchange, TimeSeries, StockTimeSeries}
-import java.time.{Instant, Duration}
+import java.time.{Instant, Duration, LocalDateTime, ZoneOffset, ZoneId}
+import java.time.format.DateTimeFormatter
 import domain.TimeSeries
 
 class TwelveDataClient extends JsonApiHandler:
@@ -26,9 +27,9 @@ class TwelveDataClient extends JsonApiHandler:
     val endpointUri = uri"$endpointBase/$endpoint?$resolvedParams"
     endpointUri.toString
 
-  lazy val exchangesEndpoint = endpointUrl("exchanges")
-  lazy val stocksEndpoint = endpointUrl("stocks")
-  lazy val timeSeriesEndpoint = endpointUrl("time_series")
+  lazy val exchangesEndpointFactory = endpointUrl("exchanges")
+  lazy val stocksEndpointFactory = endpointUrl("stocks")
+  lazy val timeSeriesEndpointFactory = endpointUrl("time_series")
 
   private def validateResponse(
       responseObj: LinkedHashMap[String, ujson.Value.Value]
@@ -40,19 +41,11 @@ class TwelveDataClient extends JsonApiHandler:
         new Exception("Response does not contain the \"status\" or status is unsuccessful")
       )
 
-  private val datetimeStringPattern =
-    "^([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}):([0-9]{2}):([0-9]{2})$".r
-  private def datetimeStringToInstant(datetimeString: String): Instant =
-    datetimeStringPattern.findFirstMatchIn(datetimeString) match
-      case Some(datetimeMatch) =>
-        val year = datetimeMatch.group(1)
-        val month = datetimeMatch.group(2)
-        val day = datetimeMatch.group(3)
-        val hour = datetimeMatch.group(4)
-        val minute = datetimeMatch.group(5)
-        val second = datetimeMatch.group(6)
-        Instant.parse(s"$year-$month-${day}T$hour:$minute:${second}Z")
-      case None => throw new Exception(s"Could not parse datetime string: $datetimeString")
+  private def datetimeStringToInstant(datetimeString: String, exchangeTimezone: String): Instant =
+    val exchangeZoneOffset = ZoneId.of(exchangeTimezone).getRules().getOffset(Instant.now())
+    LocalDateTime
+      .parse(datetimeString, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+      .toInstant(exchangeZoneOffset)
 
   private def parseExchangeObject(
       exchangeJsonObj: LinkedHashMap[String, ujson.Value.Value]
@@ -80,7 +73,9 @@ class TwelveDataClient extends JsonApiHandler:
       stockSeriesJsonObj: LinkedHashMap[String, ujson.Value.Value]
   ): StockTimeSeries =
     val dataPoints = stockSeriesJsonObj("values").arr.reverse.toList
-    val pointsInstants = for obj <- dataPoints yield datetimeStringToInstant(obj("datetime").str)
+    val exchangeTimezone = stockSeriesJsonObj("meta").obj("exchange_timezone").str
+    val pointsInstants =
+      for obj <- dataPoints yield datetimeStringToInstant(obj("datetime").str, exchangeTimezone)
 
     if pointsInstants.length > 1 && !areInstantsEvenlySpaced(
         pointsInstants,
@@ -119,11 +114,11 @@ class TwelveDataClient extends JsonApiHandler:
         .map(_("data").arr.toList)
         .map(_.map((jsonObj: ujson.Value.Value) => parseFun(jsonObj.obj)))
 
-  val getExchanges = getObjectsFun(parseExchangeObject, exchangesEndpoint)
-  val getStocks = getObjectsFun(parseStockObject, stocksEndpoint)
+  val getExchanges = getObjectsFun(parseExchangeObject, exchangesEndpointFactory)
+  val getStocks = getObjectsFun(parseStockObject, stocksEndpointFactory)
   val getTimeSeries =
     (queryParams: Option[Map[String, String]]) =>
-      requestGet(timeSeriesEndpoint(queryParams))
+      requestGet(timeSeriesEndpointFactory(queryParams))
         .map(_.obj)
         .flatMap(validateResponse)
         .map(parseTimeSeriesObject)
