@@ -11,12 +11,18 @@ import java.time.{Instant, Duration}
 /** A utility for convenient interaction with Web APIs sending JSON data
   */
 trait JsonApiHandler:
-  private def tryParseJson(body: String): Try[ujson.Value.Value] =
-    Try(ujson.read(body))
+  private def tryParseJson(response: Response[String]): Try[ujson.Value.Value] =
+    Try(ujson.read(response.body))
+
+  private def checkStatusCode(response: Response[String]): Try[Response[String]] =
+    if !response.code.isSuccess
+    then Failure(Exception(s"Unsuccessful API request. Status code: ${response.code}"))
+    else Success(response)
 
   def requestGet(url: String): Try[ujson.Value.Value] =
     Try(quickRequest.get(uri"$url").send())
-      .flatMap((response: Response[String]) => tryParseJson(response.body))
+      .flatMap(checkStatusCode)
+      .flatMap(tryParseJson)
 
 /** Checks whether all breaks between time moments indicated by subsequent `Instant` instances are
   * equal to `expectedBreak`
