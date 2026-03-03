@@ -24,8 +24,8 @@ case class Stock(
 
 class TimeSeries(
     val values: Vector[Double],
-    private val startTime: Instant,
-    private val interval: String
+    val startTime: Instant,
+    val interval: String
 ):
 
   private val intervalPattern = "^([0-9]+)(min|h|days?)$".r
@@ -40,8 +40,6 @@ class TimeSeries(
         case _      => throw new Exception(s"Unknown time unit: $unit")
     case _ => throw new Exception(s"Given interval could not be parsed: $interval")
 
-  def getStartTime = startTime
-  def getInterval = interval
   lazy val length = values.length
   lazy val lastTime = startTime.plusSeconds(intervalDuration.toSeconds() * (length - 1))
 

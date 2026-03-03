@@ -28,7 +28,7 @@ class TimeSeriesSuite extends munit.FunSuite {
             expected = 4
         )
         assertEquals(
-            obtained = sliced.getStartTime,
+            obtained = sliced.startTime,
             expected = Instant.parse("2026-03-12T11:00:00Z")
         )
     }
@@ -49,7 +49,7 @@ class TimeSeriesSuite extends munit.FunSuite {
             expected = 3
         )
         assertEquals(
-            obtained = sliced.getStartTime,
+            obtained = sliced.startTime,
             expected = Instant.parse("2026-03-12T13:00:00Z")
         )
     }
@@ -69,7 +69,7 @@ class TimeSeriesSuite extends munit.FunSuite {
             expected = Vector(0.61, 74.09, 61.3, 4.0, 99.999999999, 14.2)
         )
         assertEquals(
-            obtained = sliced.getStartTime,
+            obtained = sliced.startTime,
             expected = Instant.parse("2025-11-23T01:40:00Z")
         )
         assertEquals(
@@ -93,7 +93,7 @@ class TimeSeriesSuite extends munit.FunSuite {
             expected = Vector(0.61, 74.09, 61.3, 4.0)
         )
         assertEquals(
-            obtained = sliced.getStartTime,
+            obtained = sliced.startTime,
             expected = Instant.parse("2025-11-23T01:40:00Z")
         )
         assertEquals(
