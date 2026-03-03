@@ -94,7 +94,7 @@ class TwelveDataClient extends JsonApiHandler:
         nameAndValues._1 -> TimeSeries(
           values = nameAndValues._2.toVector,
           startTime = pointsInstants(0),
-          interval = stockSeriesJsonObj("meta").obj("interval").str
+          intervalString = stockSeriesJsonObj("meta").obj("interval").str
         )
       )
       .toMap

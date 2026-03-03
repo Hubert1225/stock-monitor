@@ -6,7 +6,7 @@ class TimeSeriesSuite extends munit.FunSuite {
         val ts = TimeSeries(
             values = Vector(1.2, 0.0, -0.123, 0.5, 0.6, 123.123456789),
             startTime = Instant.parse("2026-03-12T11:00:00Z"),
-            interval = "15min"
+            intervalString = "15min"
         )
         val expectedLastTime = Instant.parse("2026-03-12T12:15:00Z")
         assertEquals(obtained = ts.lastTime, expected = expectedLastTime)
@@ -16,7 +16,7 @@ class TimeSeriesSuite extends munit.FunSuite {
         val ts = TimeSeries(
             values = Vector(1.2, 0.0, -0.123, 0.5, 0.6, 123.123456789),
             startTime = Instant.parse("2026-03-12T11:00:00Z"),
-            interval = "15min"
+            intervalString = "15min"
         )
         val sliced = ts.getFromToIndex(0, 3)
         assertEquals(
@@ -37,7 +37,7 @@ class TimeSeriesSuite extends munit.FunSuite {
         val ts = TimeSeries(
             values = Vector(1.2, 0.0, -0.123, 0.5, 0.6, 123.123456789),
             startTime = Instant.parse("2026-03-12T11:00:00Z"),
-            interval = "1h"
+            intervalString = "1h"
         )
         val sliced = ts.getFromToIndex(2, 4)
         assertEquals(
@@ -58,7 +58,7 @@ class TimeSeriesSuite extends munit.FunSuite {
         val ts = TimeSeries(
             values = Vector(-123.456, 12.5, -5041.789, 0.00001, 0.61, 74.09, 61.3, 4.0, 99.999999999, 14.2, -76.95625),
             startTime = Instant.parse("2025-11-23T01:00:00Z"),
-            interval = "10min"
+            intervalString = "10min"
         )
         val sliced = ts.getFromToTime(
             fromTime = Instant.parse("2025-11-23T01:40:00Z"),
@@ -82,7 +82,7 @@ class TimeSeriesSuite extends munit.FunSuite {
         val ts = TimeSeries(
             values = Vector(-123.456, 12.5, -5041.789, 0.00001, 0.61, 74.09, 61.3, 4.0, 99.999999999, 14.2, -76.95625),
             startTime = Instant.parse("2025-11-23T01:00:00Z"),
-            interval = "10min"
+            intervalString = "10min"
         )
         val sliced = ts.getFromToTime(
             fromTime = Instant.parse("2025-11-23T01:40:00Z"),
