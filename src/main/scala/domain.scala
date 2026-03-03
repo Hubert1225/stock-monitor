@@ -56,17 +56,20 @@ class TimeSeries(
       interval
     )
 
-  def getFromToTime(fromTime: Instant, toTime: Instant): TimeSeries =
-    val startOffset =
-      (Duration.between(startTime, fromTime).toSeconds().toDouble / intervalDuration
-        .toSeconds()
-        .toDouble).floor.toInt
-    assert(startOffset >= 0)
-    val endOffset = (Duration.between(toTime, lastTime).toSeconds().toDouble / intervalDuration
+  /* Calculates how many time steps (intervals) from the start time
+  to the given offset time is there */
+  private def getOffset(offsetTime: Instant) =
+    (Duration.between(startTime, offsetTime).toSeconds().toDouble / intervalDuration
       .toSeconds()
-      .toDouble).ceil.toInt
-    assert(endOffset >= 0)
-    getFromToIndex(startOffset, length - endOffset - 1)
+      .toDouble).floor.toInt
+
+  def getFromToTime(fromTime: Instant, toTime: Instant): TimeSeries =
+    require(fromTime.isBefore(toTime))
+    val startOffset = getOffset(fromTime)
+    require(startOffset >= 0)
+    val endOffset = getOffset(toTime)
+    require(endOffset >= 0)
+    getFromToIndex(startOffset, endOffset)
 
 case class StockTimeSeries(
     stockSymbol: String,
