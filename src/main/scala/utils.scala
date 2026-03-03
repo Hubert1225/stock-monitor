@@ -23,7 +23,7 @@ trait JsonApiHandler:
 def areInstantsEvenlySpaced(instants: List[Instant], expectedBreak: Duration): Boolean =
   instants match
     case instantPrev :: instantNext :: rest =>
-      (Duration.between(instantPrev, instantNext) == expectedBreak) & areInstantsEvenlySpaced(
+      (Duration.between(instantPrev, instantNext) == expectedBreak) && areInstantsEvenlySpaced(
         instants.tail,
         expectedBreak
       )

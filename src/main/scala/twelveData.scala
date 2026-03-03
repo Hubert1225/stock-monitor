@@ -82,7 +82,7 @@ class TwelveDataClient extends JsonApiHandler:
     val dataPoints = stockSeriesJsonObj("values").arr.reverse.toList
     val pointsInstants = for obj <- dataPoints yield datetimeStringToInstant(obj("datetime").str)
 
-    if pointsInstants.length > 1 & !areInstantsEvenlySpaced(
+    if pointsInstants.length > 1 && !areInstantsEvenlySpaced(
         pointsInstants,
         Duration.between(pointsInstants(0), pointsInstants(1))
       )
