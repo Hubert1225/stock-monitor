@@ -12,6 +12,12 @@ import java.time.{Instant, Duration, LocalDateTime, ZoneOffset, ZoneId}
 import java.time.format.DateTimeFormatter
 import domain.TimeSeries
 
+given instantOrdering: Ordering[Instant]:
+  def compare(x: Instant, y: Instant): Int =
+    if x.isBefore(y) then -1
+    else if x.isAfter(y) then 1
+    else 0
+
 class TwelveDataClient extends JsonApiHandler:
 
   private val apiKey = sys.env("TWELVE_DATA_API_KEY")
@@ -93,6 +99,18 @@ class TwelveDataClient extends JsonApiHandler:
         )
       )
       .toMap
+
+    // make sure ``lastTime`` is correctly resolved for each series
+    val lastTimeFromJson = stockSeriesJsonObj("values").arr.toList
+      .map(_.obj)
+      .map(_("datetime"))
+      .map(_.str)
+      .map((datetimeString: String) => datetimeStringToInstant(datetimeString, exchangeTimezone))
+      .max
+    seriesMap.foreach((_key: String, ts: TimeSeries) =>
+      if ts.lastTime != lastTimeFromJson then
+        throw new Exception("Resolved last time moment inconsistent with the one found in JSON")
+    )
 
     StockTimeSeries(
       stockSymbol = stockSeriesJsonObj("meta").obj("symbol").str,
