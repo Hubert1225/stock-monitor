@@ -12,4 +12,4 @@ Utility for financial data monitoring written in Scala 3
 
 ### Exchanges and stocks data
 
-- <a href="https://twelvedata.com/docs#overview">Twelve Data API</a>
+- <a href="https://twelvedata.com/docs">Twelve Data API</a>
