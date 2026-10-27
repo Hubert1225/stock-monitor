@@ -9,7 +9,7 @@ Utility for financial data monitoring written in Scala 3
 ## Purpose
 
 The goal of this project is a Scala application gathering live stock data and other financial data
-along with auxiliary data (e.g. currencies exchange rates) and present it to the user so that they
+along with auxiliary data (e.g. currencies exchange rates) and present it to the user so that it
 can be explored and drilled-down.
 
 
@@ -28,4 +28,4 @@ can be explored and drilled-down.
 
 ### Exchanges and stocks data
 
-- <a href="https://twelvedata.com/docs">Twelve Data API</a>
+<a href="https://twelvedata.com/docs">Twelve Data API</a>
